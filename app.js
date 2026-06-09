@@ -114,7 +114,6 @@ function init() {
   loadState();
   setupEventListeners();
   navigateTo('patients-list');
-  moveFocus(0);
 }
 
 // Event Listeners
@@ -201,10 +200,12 @@ function navigateTo(screenId) {
   if (next) {
     next.classList.add('active');
     state.currentScreen = screenId;
+    // Render content immediately before focusing
+    onScreenEnter(screenId);
+    // Focus after a very short delay to ensure DOM is updated
     setTimeout(function() {
       moveFocus(0);
-      onScreenEnter(screenId);
-    }, 100);
+    }, 50);
   }
 }
 
