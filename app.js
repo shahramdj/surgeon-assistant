@@ -50,6 +50,10 @@
       sensitivity: { x: 0.14, y: 0.12 },
       deadZone: { x: 4, y: 4 },
     },
+    gestureControl: {
+      active: false,
+      eventNames: ['neurobandgesture', 'emggesture', 'gesturecontrol'],
+    },
   };
 
   var screens = {};
@@ -200,6 +204,36 @@
     }
   }
 
+  function handleGestureZoom(event) {
+    var detail = event.detail || {};
+    var gesture = detail.gesture || detail.name || detail.type || event.type;
+    if (!gesture) return;
+
+    gesture = String(gesture).toLowerCase().trim();
+
+    if (gesture === 'zoom-in' || gesture === 'zoom_in' || gesture === 'pinch-open' || gesture === 'spread' || gesture === 'expand') {
+      zoom(0.2);
+    } else if (gesture === 'zoom-out' || gesture === 'zoom_out' || gesture === 'pinch-close' || gesture === 'pinch' || gesture === 'contract') {
+      zoom(-0.2);
+    }
+  }
+
+  function startGestureControl() {
+    if (state.gestureControl.active) return;
+    state.gestureControl.active = true;
+    state.gestureControl.eventNames.forEach(function(name) {
+      window.addEventListener(name, handleGestureZoom);
+    });
+  }
+
+  function stopGestureControl() {
+    if (!state.gestureControl.active) return;
+    state.gestureControl.active = false;
+    state.gestureControl.eventNames.forEach(function(name) {
+      window.removeEventListener(name, handleGestureZoom);
+    });
+  }
+
   function startHeadNavigation() {
     if (!state.headControl.supported || state.headControl.active) return;
     state.headControl.active = true;
@@ -274,8 +308,10 @@
     if (screenId === 'home') {
       renderPatientList();
       stopHeadNavigation();
+      stopGestureControl();
     } else if (screenId === 'detail') {
       startHeadNavigation();
+      startGestureControl();
     }
   }
 
