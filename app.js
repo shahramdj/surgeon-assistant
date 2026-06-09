@@ -43,6 +43,13 @@
   var state = {
     currentPatient: null,
     viewer: { scale: 1, x: 0, y: 0 },
+    headControl: {
+      supported: typeof DeviceOrientationEvent !== 'undefined',
+      active: false,
+      neutral: null,
+      sensitivity: { x: 0.14, y: 0.12 },
+      deadZone: { x: 4, y: 4 },
+    },
   };
 
   var screens = {};
@@ -134,7 +141,7 @@
 
   function populateDetail(patient) {
     state.currentPatient = patient;
-    state.viewer = { scale: 1, x: 0, y: 0 };
+    state.viewer = { scale: 1.4, x: 0, y: 0 };
 
     document.getElementById('detail-name').textContent = patient.name;
     document.getElementById('detail-procedure').textContent = patient.procedure;
@@ -158,10 +165,53 @@
     updateViewer();
   }
 
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
   function updateViewer() {
     var image = document.getElementById('xray-image');
     if (!image) return;
     image.style.transform = 'translate(' + state.viewer.x + 'px, ' + state.viewer.y + 'px) scale(' + state.viewer.scale + ')';
+  }
+
+  function onHeadOrientation(event) {
+    if (!state.headControl.active || state.currentScreen !== 'detail') return;
+    if (event.beta === null || event.gamma === null) return;
+
+    if (!state.headControl.neutral) {
+      state.headControl.neutral = { beta: event.beta, gamma: event.gamma };
+      return;
+    }
+
+    var deltaX = event.gamma - state.headControl.neutral.gamma;
+    var deltaY = event.beta - state.headControl.neutral.beta;
+
+    if (Math.abs(deltaX) < state.headControl.deadZone.x) deltaX = 0;
+    if (Math.abs(deltaY) < state.headControl.deadZone.y) deltaY = 0;
+
+    var panX = clamp(deltaX * state.headControl.sensitivity.x, -24, 24);
+    var panY = clamp(deltaY * state.headControl.sensitivity.y, -18, 18);
+
+    if (panX || panY) {
+      state.viewer.x += panX;
+      state.viewer.y += panY;
+      updateViewer();
+    }
+  }
+
+  function startHeadNavigation() {
+    if (!state.headControl.supported || state.headControl.active) return;
+    state.headControl.active = true;
+    state.headControl.neutral = null;
+    window.addEventListener('deviceorientation', onHeadOrientation);
+  }
+
+  function stopHeadNavigation() {
+    if (!state.headControl.active) return;
+    state.headControl.active = false;
+    window.removeEventListener('deviceorientation', onHeadOrientation);
+    state.headControl.neutral = null;
   }
 
   function zoom(delta) {
@@ -176,7 +226,8 @@
   }
 
   function resetView() {
-    state.viewer = { scale: 1, x: 0, y: 0 };
+    state.viewer = { scale: 1.4, x: 0, y: 0 };
+    state.headControl.neutral = null;
     updateViewer();
   }
 
@@ -222,6 +273,9 @@
   function onScreenEnter(screenId) {
     if (screenId === 'home') {
       renderPatientList();
+      stopHeadNavigation();
+    } else if (screenId === 'detail') {
+      startHeadNavigation();
     }
   }
 
