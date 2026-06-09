@@ -2,161 +2,89 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=600, height=600, initial-scale=1.0">
-  <meta name="theme-color" content="#0a0a0a">
-  <title>Surgeon Assistant</title>
+  <meta name="viewport" content="width=600, height=600, initial-scale=1.0, user-scalable=no">
+  <meta name="description" content="Patient dashboard for Meta Display Glasses with vitals, procedure, AI recommendations, and X-ray viewer.">
+  <meta name="mrbd-web-app-capable" content="yes">
+  <title>Patient Dashboard</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Patients List Screen -->
-  <div class="screen" id="patients-list">
-    <header class="header">
-      <div class="header-title">Patients</div>
-      <div class="header-subtitle">Select a patient</div>
-    </header>
-
-    <div class="content">
-      <div id="patients-container" class="list-container">
-        <div class="list-item focusable" tabindex="0" data-action="select-patient" data-patient-id="P001">
-          <div class="list-item-primary">John Anderson</div>
-          <div class="list-item-secondary">Age: 58 | ID: P001</div>
+  <div id="app">
+    <div id="home" class="screen">
+      <header class="header">
+        <h1>Patient Dashboard</h1>
+        <span class="header-meta" id="home-meta">3 patients</span>
+      </header>
+      <div class="content">
+        <div class="intro card">
+          <div class="intro-title">Today's rounds</div>
+          <div class="intro-copy">Select a patient to review procedure details, vitals, AI guidance, and an X-ray viewer.</div>
         </div>
-        <div class="list-item focusable" tabindex="0" data-action="select-patient" data-patient-id="P002">
-          <div class="list-item-primary">Sarah Mitchell</div>
-          <div class="list-item-secondary">Age: 42 | ID: P002</div>
-        </div>
-        <div class="list-item focusable" tabindex="0" data-action="select-patient" data-patient-id="P003">
-          <div class="list-item-primary">Michael Chen</div>
-          <div class="list-item-secondary">Age: 67 | ID: P003</div>
-        </div>
+        <div class="patient-grid" id="patient-list"></div>
       </div>
     </div>
 
-    <nav class="nav-bar">
-      <button class="nav-item focusable" data-action="refresh">&#8635; Refresh</button>
-    </nav>
-  </div>
+    <div id="detail" class="screen hidden">
+      <header class="header">
+        <button class="back-btn focusable" data-action="back">&#8592;</button>
+        <div>
+          <h1 id="detail-name">Patient</h1>
+          <div class="header-meta" id="detail-procedure">Procedure</div>
+        </div>
+      </header>
+      <div class="content">
+        <div class="detail-grid">
+          <div class="card vitals-card">
+            <div class="section-title">Vital Signs</div>
+            <div class="vitals-row">
+              <div class="vital-block">
+                <div class="vital-label">HR</div>
+                <div class="vital-value" id="vital-hr">--</div>
+              </div>
+              <div class="vital-block">
+                <div class="vital-label">BP</div>
+                <div class="vital-value" id="vital-bp">--</div>
+              </div>
+            </div>
+            <div class="vitals-row">
+              <div class="vital-block">
+                <div class="vital-label">SpO₂</div>
+                <div class="vital-value" id="vital-spo2">--</div>
+              </div>
+              <div class="vital-block">
+                <div class="vital-label">Temp</div>
+                <div class="vital-value" id="vital-temp">--</div>
+              </div>
+            </div>
+          </div>
 
-  <!-- Patient Medical History Screen -->
-  <div class="screen" id="patient-history" style="display: none;">
-    <header class="header">
-      <button class="header-back focusable" data-action="back">&#8592;</button>
-      <div>
-        <div class="header-title" id="patient-name">Patient Name</div>
-        <div class="header-subtitle" id="patient-id">ID: XXXX</div>
-      </div>
-    </header>
-
-    <div class="content">
-      <div class="data-grid">
-        <!-- Vital Signs Card -->
-        <div class="card">
-          <div class="card-subtitle">Vitals</div>
-          <div class="card-detail">
-            <div class="detail-item">
-              <span class="detail-label">BP:</span>
-              <span class="detail-value" id="vitals-bp">--</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">HR:</span>
-              <span class="detail-value" id="vitals-hr">--</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Temp:</span>
-              <span class="detail-value" id="vitals-temp">--</span>
-            </div>
+          <div class="card ai-card">
+            <div class="section-title">AI Recommendations</div>
+            <div id="ai-recommendations" class="recommendations"></div>
           </div>
         </div>
 
-        <!-- Allergies Card -->
-        <div class="card">
-          <div class="card-subtitle">Allergies</div>
-          <div class="card-value" id="allergies-list">None</div>
-        </div>
-
-        <!-- Current Medications Card -->
-        <div class="card">
-          <div class="card-subtitle">Medications</div>
-          <div class="card-detail" id="medications-list">
-            <div class="detail-item">No medications</div>
+        <div class="card xray-card">
+          <div class="section-title">X-ray Viewer</div>
+          <div class="xray-frame">
+            <div class="xray-image-wrapper" id="xray-wrapper">
+              <img id="xray-image" src="" alt="X-ray image" draggable="false">
+            </div>
           </div>
-        </div>
-
-        <!-- Medical History Card -->
-        <div class="card">
-          <div class="card-subtitle">Medical History</div>
-          <div class="card-detail" id="history-list">
-            <div class="detail-item">No history</div>
-          </div>
-        </div>
-
-        <!-- Recent Procedures Card -->
-        <div class="card">
-          <div class="card-subtitle">Recent Procedures</div>
-          <div class="card-detail" id="procedures-list">
-            <div class="detail-item">No procedures</div>
+          <div class="viewer-hint">Use zoom and pan controls below to inspect the image.</div>
+          <div class="viewer-controls">
+            <button class="nav-item focusable" data-action="zoom-out">Zoom -</button>
+            <button class="nav-item focusable" data-action="zoom-in">Zoom +</button>
+            <button class="nav-item focusable" data-action="pan-left">◀</button>
+            <button class="nav-item focusable" data-action="pan-right">▶</button>
+            <button class="nav-item focusable" data-action="pan-up">▲</button>
+            <button class="nav-item focusable" data-action="pan-down">▼</button>
+            <button class="nav-item focusable primary" data-action="reset-view">Reset</button>
           </div>
         </div>
       </div>
     </div>
-
-    <nav class="nav-bar">
-      <button class="nav-item focusable primary" data-action="view-xray">&#128204; X-Ray</button>
-      <button class="nav-item focusable" data-action="back">Back</button>
-    </nav>
   </div>
-
-  <!-- X-Ray Viewer Screen -->
-  <div class="screen" id="xray-viewer" style="display: none;">
-    <header class="header">
-      <button class="header-back focusable" data-action="back">&#8592;</button>
-      <div>
-        <div class="header-title" id="xray-title">X-Ray</div>
-        <div class="header-subtitle" id="xray-date">Date: --</div>
-      </div>
-    </header>
-
-    <div class="content">
-      <div class="xray-container">
-        <img id="xray-image" src="" alt="X-Ray" class="xray-image">
-        <div class="xray-details">
-          <div class="xray-detail-item">
-            <span class="xray-detail-label">Type:</span>
-            <span class="xray-detail-value" id="xray-type">--</span>
-          </div>
-          <div class="xray-detail-item">
-            <span class="xray-detail-label">Area:</span>
-            <span class="xray-detail-value" id="xray-area">--</span>
-          </div>
-          <div class="xray-detail-item">
-            <span class="xray-detail-label">Notes:</span>
-            <span class="xray-detail-value" id="xray-notes">--</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <nav class="nav-bar">
-      <button class="nav-item focusable" data-action="back">Back</button>
-    </nav>
-  </div>
-
-  <!-- Loading State -->
-  <div id="loading" class="loading-container hidden">
-    <div class="loading-spinner"></div>
-    <div class="loading-text">Loading...</div>
-  </div>
-
-  <!-- Error State -->
-  <div id="error" class="error-container hidden">
-    <div class="error-icon">&#9888;</div>
-    <div class="error-message" id="error-message">Something went wrong</div>
-    <button class="nav-item focusable" data-action="back">Dismiss</button>
-  </div>
-
-  <!-- Toast Notification -->
-  <div id="toast" class="toast hidden"></div>
-
   <script src="app.js"></script>
 </body>
 </html>
